@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="44px" height="38px" viewBox="0 0 44 38" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 59.1 (86144) - https://sketch.com -->
+    <title>ic_smartFolder</title>
+    <desc>Created with Sketch.</desc>
+    <g id="页面1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="知識庫圖標改版" transform="translate(-36.000000, -545.000000)" fill-rule="nonzero">
+            <g id="ic_smartFolder" transform="translate(36.000000, 545.000000)">
+                <rect id="Rectangle" fill="#285DB3" x="6" y="2" width="38" height="22" rx="3"></rect>
+                <path d="M19,8 L0,8 L0,3 C0,1.34314575 1.34314575,0 3,0 L11,0 L19,8 Z" id="Path" fill="#C2DEFF"></path>
+                <path d="M41,38 L3,38 C1.34314575,38 0,36.4578697 0,34.5555556 L0,7 L44,7 L44,33.4074074 C44,36.4614815 42.66,38 41,38 Z" id="Path" fill="#0072EF"></path>
+                <path d="M22,17 C19.2385763,17 17,19.2385763 17,22 C17,24.7614237 19.2385763,27 22,27 C24.7614237,27 27,24.7614237 27,22 C27,19.2385763 24.7614237,17 22,17 Z M22,25 C20.7866133,25 19.6927044,24.2690735 19.2283614,23.1480503 C18.7640184,22.0270271 19.0206857,20.7366736 19.8786797,19.8786797 C20.7366736,19.0206857 22.0270271,18.7640184 23.1480503,19.2283614 C24.2690735,19.6927044 25,20.7866133 25,22 C25,23.6568542 23.6568542,25 22,25 Z" id="Shape" fill="#FFFFFF"></path>
+                <polygon id="Path" fill="#FFFFFF" points="24 19 20 19 21 15 23 15"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="21.29 18.46 18.46 21.29 16.34 17.76 17.76 16.34"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="19 20 19 24 15 23 15 21"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="18.46 22.71 21.29 25.54 17.76 27.66 16.34 26.24"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="20 25 24 25 23 29 21 29"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="22.71 25.54 25.54 22.71 27.66 26.24 26.24 27.66"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="25 24 25 20 29 21 29 23"></polygon>
+                <polygon id="Path" fill="#FFFFFF" points="25.54 21.29 22.71 18.46 26.24 16.34 27.66 17.76"></polygon>
+            </g>
+        </g>
+    </g>
+</svg>

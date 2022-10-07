@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="46px" height="46px" viewBox="0 0 46 46" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 57.1 (83088) - https://sketch.com -->
+    <title>ic_multilevel</title>
+    <desc>Created with Sketch.</desc>
+    <g id="中文版" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="ic_multilevel" fill-rule="nonzero">
+            <rect id="Rectangle" fill="#285DB3" x="8" y="14" width="1" height="10"></rect>
+            <rect id="Rectangle" fill="#285DB3" x="8" y="23" width="10" height="1"></rect>
+            <rect id="Rectangle" fill="#285DB3" x="22" y="30" width="1" height="10"></rect>
+            <rect id="Rectangle" fill="#285DB3" x="22" y="39" width="10" height="1"></rect>
+            <path d="M3,1 L17,1 C17.5522847,1 18,1.44771525 18,2 L18,4 L3,4 L3,1 Z" id="Path" fill="#C2DEFF"></path>
+            <path d="M0,3 L18,3 L18,13 C18,13.5522847 17.5522847,14 17,14 L1,14 C0.44771525,14 0,13.5522847 0,13 L0,3 Z" id="Path" fill="#0072EF"></path>
+            <path d="M8,4 L0,4 L0,1 C0,0.44771525 0.44771525,0 1,0 L4,0 L8,4 Z" id="Path" fill="#0072EF"></path>
+            <path d="M31,33 L45,33 C45.5522847,33 46,33.4477153 46,34 L46,36 L31,36 L31,33 Z" id="Path" fill="#C2DEFF"></path>
+            <path d="M28,35 L46,35 L46,45 C46,45.5522847 45.5522847,46 45,46 L29,46 C28.4477153,46 28,45.5522847 28,45 L28,35 Z" id="Path" fill="#0072EF"></path>
+            <path d="M36,36 L28,36 L28,33 C28,32.4477153 28.4477153,32 29,32 L32,32 L36,36 Z" id="Path" fill="#0072EF"></path>
+            <path d="M17,17 L31,17 C31.5522847,17 32,17.4477153 32,18 L32,20 L17,20 L17,17 Z" id="Path" fill="#C2DEFF"></path>
+            <path d="M14,19 L32,19 L32,29 C32,29.5522847 31.5522847,30 31,30 L15,30 C14.4477153,30 14,29.5522847 14,29 L14,19 Z" id="Path" fill="#0072EF"></path>
+            <path d="M22,20 L14,20 L14,17 C14,16.4477153 14.4477153,16 15,16 L18,16 L22,20 Z" id="Path" fill="#0072EF"></path>
+        </g>
+    </g>
+</svg>
