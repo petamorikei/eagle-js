@@ -248,6 +248,7 @@ export class EagleClient {
 
   getItemList = async (data: {
     limit?: number;
+    offset?: number;
     orderBy?: Order;
     keyword?: string;
     ext?: string;
