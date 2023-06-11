@@ -223,9 +223,10 @@ export class EagleClient {
   };
 
   getItemInfo = async (data: { id: string }) => {
-    const res = await fetch(this._url + Api.item.info, {
-      headers: data,
-    });
+    const params = new URLSearchParams(data);
+    const res = await fetch(
+      `${this._url}${Api.item.info}?${params.toString()}`
+    );
     if (res.ok) {
       const getItemInfoResult = (await res.json()) as GetItemInfoResult;
       return getItemInfoResult;
@@ -235,9 +236,10 @@ export class EagleClient {
   };
 
   getItemThumbnail = async (data: { id: string }) => {
-    const res = await fetch(this._url + Api.item.thumbnail, {
-      headers: data,
-    });
+    const params = new URLSearchParams(data);
+    const res = await fetch(
+      `${this._url}${Api.item.thumbnail}${params.toString()}`
+    );
     if (res.ok) {
       const getItemThumbnailResult =
         (await res.json()) as GetItemThumbnailResult;
@@ -262,10 +264,11 @@ export class EagleClient {
         return [key, value];
       }
     });
-    const headers = Object.fromEntries(stringifiedData);
-    const res = await fetch(this._url + Api.item.list, {
-      headers: headers,
-    });
+    const params = new URLSearchParams(stringifiedData);
+    const res = await fetch(
+      `${this._url}${Api.item.list}?${params.toString()}`
+    );
+
     if (res.ok) {
       const getItemListResult = (await res.json()) as GetItemListResult;
       return getItemListResult;
