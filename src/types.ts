@@ -11,7 +11,7 @@ export const Color = {
   pink: "pink",
 } as const;
 
-export type Color = typeof Color[keyof typeof Color];
+export type Color = (typeof Color)[keyof typeof Color];
 
 export type GetApplicationInfoResult = {
   status: string;
