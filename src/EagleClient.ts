@@ -1,5 +1,5 @@
 import { OutgoingHttpHeaders } from "http";
-import { Api } from "./EndPoints";
+import { Api } from "./Api";
 import {
   AddBookmarkResult,
   AddItemFromPathResult,

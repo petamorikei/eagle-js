@@ -28,4 +28,4 @@ export const Api = {
     history: "/api/library/history",
     switch: "/api/library/switch",
   },
-};
+} as const;
