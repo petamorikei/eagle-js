@@ -89,7 +89,6 @@ describe("item", () => {
       items: [
         { path: path.join(__dirname, "../assets/ic_multilevel.svg") },
         { path: path.join(__dirname, "../assets/ic_smartFolder.svg") },
-        { path: path.join(__dirname, "../assets/ic_tag.svg") },
       ],
     });
     expect(result.status).toBe("success");
@@ -116,7 +115,13 @@ describe("item", () => {
   });
 
   test("move to trash", async () => {
-    const list = await client.getItemList({});
+    await client.addItemFromPath({
+      tags: ["toBeRemoved"],
+      path: path.join(__dirname, "../assets/ic_tag.svg"),
+    });
+    const list = await client.getItemList({
+      tags: ["toBeRemoved"],
+    });
     if (list.status !== "success") {
       throw new Error();
     }
