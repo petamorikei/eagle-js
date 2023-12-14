@@ -287,7 +287,7 @@ export type GetLibraryInfoResult = {
     folders: {
       id: string;
       name: string;
-      description: "";
+      description: string;
       children: {
         id: string;
         name: string;
