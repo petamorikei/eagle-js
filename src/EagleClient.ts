@@ -238,7 +238,7 @@ export class EagleClient {
   getItemThumbnail = async (data: { id: string }) => {
     const params = new URLSearchParams(data);
     const res = await fetch(
-      `${this._url}${Api.item.thumbnail}${params.toString()}`,
+      `${this._url}${Api.item.thumbnail}?${params.toString()}`,
     );
     if (res.ok) {
       const getItemThumbnailResult =
