@@ -46,7 +46,9 @@ export class EagleClient {
   }
 
   getApplicationInfo = async () => {
-    const res = await fetch(this._url + Api.application.info);
+    const res = await fetch(this._url + Api.application.info, {
+      redirect: "follow",
+    });
     if (res.ok) {
       const getApplicationInfoResult =
         (await res.json()) as GetApplicationInfoResult;
@@ -63,6 +65,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.folder.create, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const createFolderResult = (await res.json()) as CreateFolderResult;
@@ -76,6 +79,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.folder.rename, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const renameFolderResult = (await res.json()) as RenameFolderResult;
@@ -94,6 +98,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.folder.update, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const updateFolderResult = (await res.json()) as UpdateFolderResult;
@@ -104,7 +109,9 @@ export class EagleClient {
   };
 
   getFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.list);
+    const res = await fetch(this._url + Api.folder.list, {
+      redirect: "follow",
+    });
     if (res.ok) {
       const getFolderListResult = (await res.json()) as GetFolderListResult;
       return getFolderListResult;
@@ -114,7 +121,9 @@ export class EagleClient {
   };
 
   getRecentFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.listRecent);
+    const res = await fetch(this._url + Api.folder.listRecent, {
+      redirect: "follow",
+    });
     if (res.ok) {
       const getRecentFolderListResult =
         (await res.json()) as GetRecentFolderListResult;
@@ -137,6 +146,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.addFromUrl, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const addItemFromUrlResult = (await res.json()) as AddItemFromUrlResult;
@@ -150,6 +160,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.addFromUrls, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const addItemFromUrlsResult = (await res.json()) as AddItemFromUrlsResult;
@@ -170,6 +181,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.addFromPath, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const addItemFromPathResult = (await res.json()) as AddItemFromPathResult;
@@ -192,6 +204,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.addFromPaths, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const addItemsFromPathsResult =
@@ -213,6 +226,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.addBookmark, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const addBookmarkResult = (await res.json()) as AddBookmarkResult;
@@ -226,6 +240,9 @@ export class EagleClient {
     const params = new URLSearchParams(data);
     const res = await fetch(
       `${this._url}${Api.item.info}?${params.toString()}`,
+      {
+        redirect: "follow",
+      }
     );
     if (res.ok) {
       const getItemInfoResult = (await res.json()) as GetItemInfoResult;
@@ -239,6 +256,9 @@ export class EagleClient {
     const params = new URLSearchParams(data);
     const res = await fetch(
       `${this._url}${Api.item.thumbnail}?${params.toString()}`,
+      {
+        redirect: "follow",
+      }
     );
     if (res.ok) {
       const getItemThumbnailResult =
@@ -267,6 +287,9 @@ export class EagleClient {
     const params = new URLSearchParams(stringifiedData);
     const res = await fetch(
       `${this._url}${Api.item.list}?${params.toString()}`,
+      {
+        redirect: "follow",
+      }
     );
 
     if (res.ok) {
@@ -281,6 +304,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.moveToTrash, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const moveItemToTrashResult = (await res.json()) as MoveItemToTrashResult;
@@ -294,6 +318,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.refreshPalette, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const refreshItemPaletteResult =
@@ -308,6 +333,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.refreshThumbnail, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const refreshThumbnailResult =
@@ -328,6 +354,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.item.update, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const updateItemResult = (await res.json()) as UpdateItemResult;
@@ -338,7 +365,9 @@ export class EagleClient {
   };
 
   getLibraryInfo = async () => {
-    const res = await fetch(this._url + Api.library.info);
+    const res = await fetch(this._url + Api.library.info, {
+      redirect: "follow",
+    });
     if (res.ok) {
       const getLibraryInfoResult = (await res.json()) as GetLibraryInfoResult;
       return getLibraryInfoResult;
@@ -348,7 +377,9 @@ export class EagleClient {
   };
 
   getLibraryHistory = async () => {
-    const res = await fetch(this._url + Api.library.history);
+    const res = await fetch(this._url + Api.library.history, {
+      redirect: "follow",
+    });
     if (res.ok) {
       const getLibraryHistoryResult =
         (await res.json()) as GetLibraryHistoryResult;
@@ -362,6 +393,7 @@ export class EagleClient {
     const res = await fetch(this._url + Api.library.switch, {
       method: "POST",
       body: JSON.stringify(data),
+      redirect: "follow",
     });
     if (res.ok) {
       const switchLibraryResult = (await res.json()) as SwitchLibraryResult;
