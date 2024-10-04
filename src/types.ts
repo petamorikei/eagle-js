@@ -1,4 +1,4 @@
-import { OutgoingHttpHeaders } from "http";
+import type { OutgoingHttpHeaders } from "node:http";
 
 export const Color = {
   red: "red",

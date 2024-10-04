@@ -4,9 +4,7 @@
   "description": "Wrapper for Eagle API",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "dev": "ts-node src/main.ts",
     "dev:watch": "ts-node-dev --respawn src/main.ts",
