@@ -46,14 +46,12 @@ export class EagleClient {
   }
 
   getApplicationInfo = async () => {
-    const res = await fetch(this._url + Api.application.info, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getApplicationInfoResult = (await res.json()) as GetApplicationInfoResult;
-      return getApplicationInfoResult;
+    const res = await fetch(this._url + Api.application.info, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getApplicationInfoResult = (await res.json()) as GetApplicationInfoResult;
+    return getApplicationInfoResult;
   };
 
   createFolder = async (data: {
@@ -65,11 +63,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const createFolderResult = (await res.json()) as CreateFolderResult;
-      return createFolderResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const createFolderResult = (await res.json()) as CreateFolderResult;
+    return createFolderResult;
   };
 
   renameFolder = async (data: { folderId: string; newName: string }) => {
@@ -78,11 +76,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const renameFolderResult = (await res.json()) as RenameFolderResult;
-      return renameFolderResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const renameFolderResult = (await res.json()) as RenameFolderResult;
+    return renameFolderResult;
   };
 
   updateFolder = async (data: {
@@ -96,33 +94,29 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const updateFolderResult = (await res.json()) as UpdateFolderResult;
-      return updateFolderResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const updateFolderResult = (await res.json()) as UpdateFolderResult;
+    return updateFolderResult;
   };
 
   getFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.list, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getFolderListResult = (await res.json()) as GetFolderListResult;
-      return getFolderListResult;
+    const res = await fetch(this._url + Api.folder.list, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getFolderListResult = (await res.json()) as GetFolderListResult;
+    return getFolderListResult;
   };
 
   getRecentFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.listRecent, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getRecentFolderListResult = (await res.json()) as GetRecentFolderListResult;
-      return getRecentFolderListResult;
+    const res = await fetch(this._url + Api.folder.listRecent, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getRecentFolderListResult = (await res.json()) as GetRecentFolderListResult;
+    return getRecentFolderListResult;
   };
 
   addItemFromUrl = async (data: {
@@ -140,11 +134,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const addItemFromUrlResult = (await res.json()) as AddItemFromUrlResult;
-      return addItemFromUrlResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const addItemFromUrlResult = (await res.json()) as AddItemFromUrlResult;
+    return addItemFromUrlResult;
   };
 
   addItemFromUrls = async (data: { items: Item[]; folderId?: string }) => {
@@ -154,10 +148,10 @@ export class EagleClient {
       redirect: "follow",
     });
     if (res.ok) {
-      const addItemFromUrlsResult = (await res.json()) as AddItemFromUrlsResult;
-      return addItemFromUrlsResult;
+      throw new Error();
     }
-    throw new Error();
+    const addItemFromUrlsResult = (await res.json()) as AddItemFromUrlsResult;
+    return addItemFromUrlsResult;
   };
 
   addItemFromPath = async (data: {
@@ -173,11 +167,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const addItemFromPathResult = (await res.json()) as AddItemFromPathResult;
-      return addItemFromPathResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const addItemFromPathResult = (await res.json()) as AddItemFromPathResult;
+    return addItemFromPathResult;
   };
 
   addItemFromPaths = async (data: {
@@ -195,11 +189,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const addItemsFromPathsResult = (await res.json()) as AddItemFromPathsResult;
-      return addItemsFromPathsResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const addItemsFromPathsResult = (await res.json()) as AddItemFromPathsResult;
+    return addItemsFromPathsResult;
   };
 
   addBookmark = async (data: {
@@ -215,34 +209,31 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const addBookmarkResult = (await res.json()) as AddBookmarkResult;
-      return addBookmarkResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const addBookmarkResult = (await res.json()) as AddBookmarkResult;
+    return addBookmarkResult;
   };
 
   getItemInfo = async (data: { id: string }) => {
     const params = new URLSearchParams(data);
-    const res = await fetch(`${this._url}${Api.item.info}?${params.toString()}`, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getItemInfoResult = (await res.json()) as GetItemInfoResult;
-      return getItemInfoResult;
+    const res = await fetch(`${this._url}${Api.item.info}?${params.toString()}`, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getItemInfoResult = (await res.json()) as GetItemInfoResult;
+    return getItemInfoResult;
   };
 
   getItemThumbnail = async (data: { id: string }) => {
     const params = new URLSearchParams(data);
-    const res = await fetch(`${this._url}${Api.item.thumbnail}?${params.toString()}`, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getItemThumbnailResult = (await res.json()) as GetItemThumbnailResult;
-      return getItemThumbnailResult;
+    const res = await fetch(`${this._url}${Api.item.thumbnail}?${params.toString()}`, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
+    const getItemThumbnailResult = (await res.json()) as GetItemThumbnailResult;
+    return getItemThumbnailResult;
   };
   // TODO: Implement method to get thumbnail data not path
 
@@ -256,21 +247,16 @@ export class EagleClient {
     folders?: string[];
   }) => {
     const stringifiedData = Object.entries(data).map(([key, value]) => {
-      if (typeof value !== "string") {
-        return [key, `${value}`];
-      }
-      return [key, value];
+      return typeof value !== "string" ? [key, `${value}`] : [key, value];
     });
     const params = new URLSearchParams(stringifiedData);
-    const res = await fetch(`${this._url}${Api.item.list}?${params.toString()}`, {
-      redirect: "follow",
-    });
+    const res = await fetch(`${this._url}${Api.item.list}?${params.toString()}`, { redirect: "follow" });
 
-    if (res.ok) {
-      const getItemListResult = (await res.json()) as GetItemListResult;
-      return getItemListResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getItemListResult = (await res.json()) as GetItemListResult;
+    return getItemListResult;
   };
 
   moveItemToTrash = async (data: { itemIds: string[] }) => {
@@ -279,11 +265,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const moveItemToTrashResult = (await res.json()) as MoveItemToTrashResult;
-      return moveItemToTrashResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const moveItemToTrashResult = (await res.json()) as MoveItemToTrashResult;
+    return moveItemToTrashResult;
   };
 
   refreshItemPalette = async (data: { id: string }) => {
@@ -292,11 +278,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const refreshItemPaletteResult = (await res.json()) as RefreshItemPaletteResult;
-      return refreshItemPaletteResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const refreshItemPaletteResult = (await res.json()) as RefreshItemPaletteResult;
+    return refreshItemPaletteResult;
   };
 
   refreshThumbnail = async (data: { id: string }) => {
@@ -305,11 +291,11 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const refreshThumbnailResult = (await res.json()) as RefreshItemPaletteResult;
-      return refreshThumbnailResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const refreshThumbnailResult = (await res.json()) as RefreshItemPaletteResult;
+    return refreshThumbnailResult;
   };
 
   updateItem = async (data: {
@@ -324,33 +310,29 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const updateItemResult = (await res.json()) as UpdateItemResult;
-      return updateItemResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const updateItemResult = (await res.json()) as UpdateItemResult;
+    return updateItemResult;
   };
 
   getLibraryInfo = async () => {
-    const res = await fetch(this._url + Api.library.info, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getLibraryInfoResult = (await res.json()) as GetLibraryInfoResult;
-      return getLibraryInfoResult;
+    const res = await fetch(this._url + Api.library.info, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getLibraryInfoResult = (await res.json()) as GetLibraryInfoResult;
+    return getLibraryInfoResult;
   };
 
   getLibraryHistory = async () => {
-    const res = await fetch(this._url + Api.library.history, {
-      redirect: "follow",
-    });
-    if (res.ok) {
-      const getLibraryHistoryResult = (await res.json()) as GetLibraryHistoryResult;
-      return getLibraryHistoryResult;
+    const res = await fetch(this._url + Api.library.history, { redirect: "follow" });
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const getLibraryHistoryResult = (await res.json()) as GetLibraryHistoryResult;
+    return getLibraryHistoryResult;
   };
 
   switchLibrary = async (data: { libraryPath: string }) => {
@@ -359,10 +341,10 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
-      const switchLibraryResult = (await res.json()) as SwitchLibraryResult;
-      return switchLibraryResult;
+    if (!res.ok) {
+      throw new Error();
     }
-    throw new Error();
+    const switchLibraryResult = (await res.json()) as SwitchLibraryResult;
+    return switchLibraryResult;
   };
 }
