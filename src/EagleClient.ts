@@ -148,7 +148,7 @@ export class EagleClient {
       body: JSON.stringify(data),
       redirect: "follow",
     });
-    if (res.ok) {
+    if (!res.ok) {
       throw new Error();
     }
     const addItemFromUrlsResult = (await res.json()) as AddItemFromUrlsResult;
