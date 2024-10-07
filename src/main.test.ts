@@ -1,7 +1,46 @@
 import path from "node:path";
-import { describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { EagleClient } from "./EagleClient";
 const client = EagleClient.instance;
+
+const moveAllItemsToTrash = async () => {
+  while (true) {
+    const getItemListResult = await client.getItemList({});
+    if (getItemListResult.status !== "success") {
+      throw new Error();
+    }
+    if (getItemListResult.data.length === 0) {
+      break;
+    }
+    const result = await client.moveItemToTrash({
+      itemIds: getItemListResult.data.map((item) => item.id),
+    });
+    if (result.status !== "success") {
+      throw new Error();
+    }
+  }
+};
+
+beforeAll(async () => {
+  console.log("beforeAll: switch library");
+  // Make sure library for testing is selected
+  const getLibraryInfoResult = await client.getLibraryInfo();
+  if (getLibraryInfoResult.status !== "success") {
+    throw new Error();
+  }
+  if (getLibraryInfoResult.data.library.name !== "Testing") {
+    throw new Error("Library for testing is not selected");
+  }
+
+  // Move all items to trash
+  await moveAllItemsToTrash();
+});
+
+afterAll(async () => {
+  console.log("afterAll: move all items to trash");
+  // Move all items to trash
+  await moveAllItemsToTrash();
+});
 
 describe("application info", () => {
   test("get", async () => {
@@ -148,13 +187,11 @@ describe("item", () => {
 describe("library", () => {
   test("get info", async () => {
     const result = await client.getLibraryInfo();
-    console.dir(result, { depth: null });
     expect(result.status).toBe("success");
   });
 
   test("get history", async () => {
     const result = await client.getLibraryHistory();
-    console.dir(result, { depth: null });
     expect(result.status).toBe("success");
   });
 
