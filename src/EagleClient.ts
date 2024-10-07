@@ -121,9 +121,10 @@ export class EagleClient {
 
   addItemFromUrl = async (data: {
     url: string;
-    name?: string;
+    name: string;
     website?: string;
     tags?: string[];
+    star?: number;
     annotation?: string;
     modificationTime?: number;
     folderId?: string;

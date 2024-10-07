@@ -62,6 +62,7 @@ describe("item", () => {
   test("add from url", async () => {
     const result = await client.addItemFromUrl({
       url: "https://files.eagle.cool/website/hero-images/en/hero-1.webp",
+      name: "hero-1",
     });
     expect(result.status).toBe("success");
   });
