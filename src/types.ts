@@ -338,6 +338,7 @@ export type GetLibraryInfoResult = {
     }[];
     modificationTime: number;
     applicationVersion: string;
+    library: { path: string; name: string };
   };
 };
 
