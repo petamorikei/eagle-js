@@ -1,6 +1,6 @@
 {
   "name": "@petamorikei/eagle-js",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Wrapper for Eagle API",
   "main": "dist/main.js",
   "types": "dist/main.d.ts",
