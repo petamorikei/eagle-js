@@ -54,10 +54,7 @@ export class EagleClient {
     return getApplicationInfoResult;
   };
 
-  createFolder = async (data: {
-    folderName: string;
-    parentFolderId?: string;
-  }) => {
+  createFolder = async (data: { folderName: string; parentFolderId?: string }) => {
     const res = await fetch(this._url + Api.folder.create, {
       method: "POST",
       body: JSON.stringify(data),
@@ -83,12 +80,7 @@ export class EagleClient {
     return renameFolderResult;
   };
 
-  updateFolder = async (data: {
-    folderId: string;
-    newName?: string;
-    newDescription?: string;
-    newColor?: Color;
-  }) => {
+  updateFolder = async (data: { folderId: string; newName?: string; newDescription?: string; newColor?: Color }) => {
     const res = await fetch(this._url + Api.folder.update, {
       method: "POST",
       body: JSON.stringify(data),
@@ -299,13 +291,7 @@ export class EagleClient {
     return refreshThumbnailResult;
   };
 
-  updateItem = async (data: {
-    id: string;
-    tags?: string[];
-    annotation?: string[];
-    url?: string;
-    star?: number;
-  }) => {
+  updateItem = async (data: { id: string; tags?: string[]; annotation?: string[]; url?: string; star?: number }) => {
     const res = await fetch(this._url + Api.item.update, {
       method: "POST",
       body: JSON.stringify(data),

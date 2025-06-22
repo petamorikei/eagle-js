@@ -1,6 +1,7 @@
 import path from "node:path";
 import { afterAll, beforeAll, describe, expect, test } from "vitest";
 import { EagleClient } from "./EagleClient";
+
 const client = EagleClient.instance;
 
 const moveAllItemsToTrash = async () => {
