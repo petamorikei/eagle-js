@@ -239,7 +239,7 @@ export class EagleClient {
     tags?: string[];
     folders?: string[];
   }) => {
-    const stringifiedData = Object.entries(data).map(([key, value]) => {
+    const stringifiedData = Object.entries(data).map(([key, value]): [string, string] => {
       return typeof value !== "string" ? [key, `${value}`] : [key, value];
     });
     const params = new URLSearchParams(stringifiedData);
