@@ -333,7 +333,6 @@ export class EagleClient {
     const json = await res.json();
     return schemas.getItemThumbnailSchema.parse(json);
   };
-  // TODO: Implement method to get thumbnail data not path
 
   /**
    * Get list of items.
