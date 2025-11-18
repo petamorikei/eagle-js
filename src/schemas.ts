@@ -261,14 +261,16 @@ export const getItemInfoSchema = z.object({
     width: z.number(),
     height: z.number(),
     noThumbnail: z.boolean().optional(),
-    lastModified: z.number(),
-    palettes: z.array(
-      z.object({
-        color: z.array(z.number()),
-        ratio: z.number(),
-        $$hashKey: z.string().optional(),
-      }),
-    ),
+    lastModified: z.number().optional(),
+    palettes: z
+      .array(
+        z.object({
+          color: z.array(z.number()),
+          ratio: z.number(),
+          $$hashKey: z.string().optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 
@@ -293,14 +295,16 @@ export const getItemListSchema = z.object({
       modificationTime: z.number(),
       height: z.number(),
       width: z.number(),
-      lastModified: z.number(),
-      palettes: z.array(
-        z.object({
-          color: z.array(z.number()),
-          ratio: z.number(),
-          $$hashKey: z.string().optional(),
-        }),
-      ),
+      lastModified: z.number().optional(),
+      palettes: z
+        .array(
+          z.object({
+            color: z.array(z.number()),
+            ratio: z.number(),
+            $$hashKey: z.string().optional(),
+          }),
+        )
+        .optional(),
     }),
   ),
 });
@@ -333,14 +337,16 @@ export const updateItemSchema = z.object({
     width: z.number(),
     height: z.number(),
     noThumbnail: z.boolean().optional(),
-    lastModified: z.number(),
-    palettes: z.array(
-      z.object({
-        color: z.array(z.number()),
-        ratio: z.number(),
-        $$hashKey: z.string().optional(),
-      }),
-    ),
+    lastModified: z.number().optional(),
+    palettes: z
+      .array(
+        z.object({
+          color: z.array(z.number()),
+          ratio: z.number(),
+          $$hashKey: z.string().optional(),
+        }),
+      )
+      .optional(),
   }),
 });
 
