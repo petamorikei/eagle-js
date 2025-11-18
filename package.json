@@ -19,9 +19,25 @@
     "prepublishOnly": "pnpm build",
     "preinstall": "npx only-allow pnpm"
   },
-  "keywords": [],
+  "keywords": [
+    "eagle",
+    "eagle-api",
+    "api",
+    "client",
+    "wrapper",
+    "typescript",
+    "digital-asset-management"
+  ],
   "author": "Petamori Kei",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/petamorikei/eagle-js.git"
+  },
+  "bugs": {
+    "url": "https://github.com/petamorikei/eagle-js/issues"
+  },
+  "homepage": "https://github.com/petamorikei/eagle-js#readme",
   "engines": {
     "node": ">=22.0.0"
   },
