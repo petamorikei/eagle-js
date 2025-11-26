@@ -220,7 +220,7 @@ export class EagleClient {
    */
   addItemFromPath = async (data: {
     path: string;
-    name?: string;
+    name: string;
     website?: string;
     annotation?: string;
     tags?: string[];
@@ -249,7 +249,7 @@ export class EagleClient {
   addItemFromPaths = async (data: {
     items: {
       path: string;
-      name?: string;
+      name: string;
       website?: string;
       annotation?: string;
       tags?: string[];
@@ -438,7 +438,7 @@ export class EagleClient {
    * @throws {EagleApiError} When the API request fails
    * @see https://api.eagle.cool/item/update
    */
-  updateItem = async (data: { id: string; tags?: string[]; annotation?: string[]; url?: string; star?: number }) => {
+  updateItem = async (data: { id: string; tags?: string[]; annotation?: string; url?: string; star?: number }) => {
     const res = await fetch(this._url + Api.item.update, {
       method: "POST",
       body: JSON.stringify(data),

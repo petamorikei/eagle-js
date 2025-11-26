@@ -148,6 +148,7 @@ describe("item", () => {
   test("add from path", async () => {
     const result = await client.addItemFromPath({
       path: path.join(__dirname, "../assets/logo@2x.png"),
+      name: "logo@2x",
     });
     expect(result.status).toBe("success");
   });
@@ -155,8 +156,8 @@ describe("item", () => {
   test("add from paths", async () => {
     const result = await client.addItemFromPaths({
       items: [
-        { path: path.join(__dirname, "../assets/ic_multilevel.svg") },
-        { path: path.join(__dirname, "../assets/ic_smartFolder.svg") },
+        { path: path.join(__dirname, "../assets/ic_multilevel.svg"), name: "ic_multilevel" },
+        { path: path.join(__dirname, "../assets/ic_smartFolder.svg"), name: "ic_smartFolder" },
       ],
     });
     expect(result.status).toBe("success");
@@ -214,7 +215,7 @@ describe("item", () => {
     const result = await client.updateItem({
       id: itemId,
       tags: ["updated", "test"],
-      annotation: ["Test annotation"],
+      annotation: "Test annotation",
     });
     expect(result.status).toBe("success");
     expect(result.data.id).toBe(itemId);
@@ -246,8 +247,9 @@ describe("item", () => {
 
   test("move to trash", async () => {
     await client.addItemFromPath({
-      tags: ["toBeRemoved"],
       path: path.join(__dirname, "../assets/ic_tag.svg"),
+      name: "ic_tag",
+      tags: ["toBeRemoved"],
     });
     const list = await client.getItemList({
       tags: ["toBeRemoved"],
