@@ -1,4 +1,4 @@
-import type { EagleErrorResponse } from "./types";
+import type { EagleErrorResponse } from "./types.ts";
 
 /**
  * Error thrown when Eagle API request fails.

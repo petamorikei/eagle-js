@@ -1,6 +1,6 @@
 import type { OutgoingHttpHeaders } from "node:http";
 import type { z } from "zod";
-import type * as schemas from "./schemas";
+import type * as schemas from "./schemas.ts";
 
 // Color
 export const Color = {

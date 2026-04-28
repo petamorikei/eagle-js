@@ -1,8 +1,8 @@
 import type { OutgoingHttpHeaders } from "node:http";
-import { Api } from "./Api";
-import { EagleApiError } from "./EagleApiError";
-import * as schemas from "./schemas";
-import type { Color, Item, Order } from "./types";
+import { Api } from "./Api.ts";
+import { EagleApiError } from "./EagleApiError.ts";
+import * as schemas from "./schemas.ts";
+import type { Color, Item, Order } from "./types.ts";
 
 /**
  * Client for interacting with the Eagle API.

@@ -1,7 +1,7 @@
 import path from "node:path";
 import { beforeAll, describe, expect, test } from "vitest";
-import { EagleApiError } from "./EagleApiError";
-import { EagleClient } from "./EagleClient";
+import { EagleApiError } from "./EagleApiError.ts";
+import { EagleClient } from "./EagleClient.ts";
 
 const client = EagleClient.instance;
 
