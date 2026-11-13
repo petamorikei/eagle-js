@@ -1,4 +1,3 @@
-import type { OutgoingHttpHeaders } from "node:http";
 import type { z } from "zod";
 import type * as schemas from "./schemas.ts";
 
@@ -22,16 +21,26 @@ export type Order = z.infer<typeof schemas.orderSchema>;
 // Child (recursive type from schema)
 export type Child = z.infer<typeof schemas.childFolderSchema>;
 
-// Item input type
-export type Item = {
+// HTTP headers Eagle sends when it downloads an item from a URL.
+// Defined here instead of using Node's OutgoingHttpHeaders so the published types do not require @types/node.
+export type HttpHeaders = Record<string, string | number | string[] | undefined>;
+
+// Input item for addItemFromUrls
+export type AddItemFromUrlsItem = {
   url: string;
   name?: string;
   website?: string;
   annotation?: string;
   tags?: string[];
   modificationTime?: number;
-  headers?: OutgoingHttpHeaders;
+  headers?: HttpHeaders;
 };
+
+/**
+ * @deprecated Use {@link AddItemFromUrlsItem} instead. `Item` is the input type for `addItemFromUrls`,
+ * not the item returned by the API.
+ */
+export type Item = AddItemFromUrlsItem;
 
 // API Response types (inferred from schemas)
 export type GetApplicationInfoResult = z.infer<typeof schemas.getApplicationInfoSchema>;
@@ -57,5 +66,6 @@ export type UpdateItemResult = z.infer<typeof schemas.updateItemSchema>;
 export type GetLibraryInfoResult = z.infer<typeof schemas.getLibraryInfoSchema>;
 export type GetLibraryHistoryResult = z.infer<typeof schemas.getLibraryHistorySchema>;
 export type SwitchLibraryResult = z.infer<typeof schemas.switchLibrarySchema>;
+export type GetLibraryIconResult = ArrayBuffer;
 
 export type EagleErrorResponse = z.infer<typeof schemas.eagleErrorResponseSchema>;

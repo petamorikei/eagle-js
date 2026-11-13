@@ -13,13 +13,13 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
           cache: "pnpm"
@@ -27,15 +27,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run Biome check
-        run: pnpm check
+      - name: Run Biome lint and format check
+        run: pnpm lint
 
-      - name: Run TypeScript compilation
-        run: pnpm tsc
+      - name: Run type check
+        run: pnpm typecheck
+
+      - name: Run unit tests
+        run: pnpm test:unit
 
       - name: Build project
         run: pnpm build
 
-      # Note: Tests are skipped because they require Eagle application
-      # to be running locally on port 41595. Run tests manually with:
+      # Note: Integration tests (src/main.test.ts) are skipped because they require
+      # the Eagle application running locally on port 41595. Run them manually with:
       # pnpm test
