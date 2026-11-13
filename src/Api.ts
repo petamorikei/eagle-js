@@ -27,5 +27,6 @@ export const Api = {
     info: "/api/library/info",
     history: "/api/library/history",
     switch: "/api/library/switch",
+    icon: "/api/library/icon",
   },
 } as const;

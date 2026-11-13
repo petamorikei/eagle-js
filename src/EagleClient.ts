@@ -1,8 +1,49 @@
-import type { OutgoingHttpHeaders } from "node:http";
+import type { z } from "zod";
 import { Api } from "./Api.ts";
 import { EagleApiError } from "./EagleApiError.ts";
 import * as schemas from "./schemas.ts";
-import type { Color, Item, Order } from "./types.ts";
+import type { AddItemFromUrlsItem, Color, EagleErrorResponse, HttpHeaders, Order } from "./types.ts";
+
+type HttpMethod = "GET" | "POST";
+
+type QueryValue = string | number | boolean | readonly string[] | undefined;
+
+type RequestOptions = {
+  /** Query parameters. `undefined` values are omitted and arrays are joined with `,`. */
+  query?: Record<string, QueryValue>;
+  /** Request body, serialized as JSON. */
+  body?: unknown;
+};
+
+const toSearchParams = (query: Record<string, QueryValue>) => {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value === undefined) {
+      continue;
+    }
+    params.append(key, Array.isArray(value) ? value.join(",") : String(value));
+  }
+  return params;
+};
+
+const parseJson = (text: string): unknown => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return undefined;
+  }
+};
+
+const isErrorStatus = (json: unknown) =>
+  typeof json === "object" && json !== null && "status" in json && json.status === "error";
+
+const toErrorResponse = (json: unknown, text: string, res: Response): EagleErrorResponse => {
+  const parsed = schemas.eagleErrorResponseSchema.safeParse(json);
+  if (parsed.success) {
+    return parsed.data;
+  }
+  return { status: "error", data: text || `${res.status} ${res.statusText}`.trim() };
+};
 
 /**
  * Client for interacting with the Eagle API.
@@ -33,10 +74,43 @@ export class EagleClient {
     return EagleClient._instance;
   }
 
-  private async handleErrorResponse(res: Response, method: string, endpoint: string): Promise<never> {
-    const json = await res.json();
-    const errorBody = schemas.eagleErrorResponseSchema.parse(json);
-    throw new EagleApiError(method, endpoint, res.status, errorBody);
+  /**
+   * Send a request to the Eagle API. A non-OK HTTP response is thrown as {@link EagleApiError}.
+   */
+  private async send(method: HttpMethod, endpoint: string, { query, body }: RequestOptions = {}) {
+    const search = query ? toSearchParams(query).toString() : "";
+    const url = `${this._url}${endpoint}${search ? `?${search}` : ""}`;
+    const res = await fetch(url, {
+      method,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new EagleApiError(method, endpoint, res.status, toErrorResponse(parseJson(text), text, res));
+    }
+    return res;
+  }
+
+  /**
+   * Send a request to the Eagle API and validate the JSON response.
+   *
+   * Any non-OK HTTP response, and any response whose `status` is `"error"`, is thrown as {@link EagleApiError}.
+   * A successful response that does not match `schema` is thrown as a `ZodError`.
+   */
+  private async request<S extends z.ZodType>(
+    method: HttpMethod,
+    endpoint: string,
+    schema: S,
+    options?: RequestOptions,
+  ): Promise<z.output<S>> {
+    const res = await this.send(method, endpoint, options);
+    const text = await res.text();
+    const json = parseJson(text);
+    if (isErrorStatus(json)) {
+      throw new EagleApiError(method, endpoint, res.status, toErrorResponse(json, text, res));
+    }
+    return schema.parse(json);
   }
 
   /**
@@ -47,12 +121,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/application/info
    */
   getApplicationInfo = async () => {
-    const res = await fetch(this._url + Api.application.info, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.application.info);
-    }
-    const json = await res.json();
-    return schemas.getApplicationInfoSchema.parse(json);
+    return this.request("GET", Api.application.info, schemas.getApplicationInfoSchema);
   };
 
   /**
@@ -66,16 +135,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/create
    */
   createFolder = async (data: { folderName: string; parentFolderId?: string }) => {
-    const res = await fetch(this._url + Api.folder.create, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.folder.create);
-    }
-    const json = await res.json();
-    return schemas.createFolderSchema.parse(json);
+    return this.request("POST", Api.folder.create, schemas.createFolderSchema, { body: data });
   };
 
   /**
@@ -89,16 +149,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/rename
    */
   renameFolder = async (data: { folderId: string; newName: string }) => {
-    const res = await fetch(this._url + Api.folder.rename, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.folder.rename);
-    }
-    const json = await res.json();
-    return schemas.renameFolderSchema.parse(json);
+    return this.request("POST", Api.folder.rename, schemas.renameFolderSchema, { body: data });
   };
 
   /**
@@ -114,16 +165,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/update
    */
   updateFolder = async (data: { folderId: string; newName?: string; newDescription?: string; newColor?: Color }) => {
-    const res = await fetch(this._url + Api.folder.update, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.folder.update);
-    }
-    const json = await res.json();
-    return schemas.updateFolderSchema.parse(json);
+    return this.request("POST", Api.folder.update, schemas.updateFolderSchema, { body: data });
   };
 
   /**
@@ -134,12 +176,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/list
    */
   getFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.list, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.folder.list);
-    }
-    const json = await res.json();
-    return schemas.getFolderListSchema.parse(json);
+    return this.request("GET", Api.folder.list, schemas.getFolderListSchema);
   };
 
   /**
@@ -150,12 +187,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/list-recent
    */
   getRecentFolderList = async () => {
-    const res = await fetch(this._url + Api.folder.listRecent, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.folder.listRecent);
-    }
-    const json = await res.json();
-    return schemas.getRecentFolderListSchema.parse(json);
+    return this.request("GET", Api.folder.listRecent, schemas.getRecentFolderListSchema);
   };
 
   /**
@@ -175,18 +207,9 @@ export class EagleClient {
     annotation?: string;
     modificationTime?: number;
     folderId?: string;
-    headers?: OutgoingHttpHeaders;
+    headers?: HttpHeaders;
   }) => {
-    const res = await fetch(this._url + Api.item.addFromUrl, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.addFromUrl);
-    }
-    const json = await res.json();
-    return schemas.addItemFromUrlSchema.parse(json);
+    return this.request("POST", Api.item.addFromUrl, schemas.addItemFromUrlSchema, { body: data });
   };
 
   /**
@@ -197,17 +220,8 @@ export class EagleClient {
    * @throws {EagleApiError} When the API request fails
    * @see https://api.eagle.cool/item/add-from-urls
    */
-  addItemFromUrls = async (data: { items: Item[]; folderId?: string }) => {
-    const res = await fetch(this._url + Api.item.addFromUrls, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.addFromUrls);
-    }
-    const json = await res.json();
-    return schemas.addItemFromUrlsSchema.parse(json);
+  addItemFromUrls = async (data: { items: AddItemFromUrlsItem[]; folderId?: string }) => {
+    return this.request("POST", Api.item.addFromUrls, schemas.addItemFromUrlsSchema, { body: data });
   };
 
   /**
@@ -226,16 +240,7 @@ export class EagleClient {
     tags?: string[];
     folderId?: string;
   }) => {
-    const res = await fetch(this._url + Api.item.addFromPath, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.addFromPath);
-    }
-    const json = await res.json();
-    return schemas.addItemFromPathSchema.parse(json);
+    return this.request("POST", Api.item.addFromPath, schemas.addItemFromPathSchema, { body: data });
   };
 
   /**
@@ -256,16 +261,7 @@ export class EagleClient {
     }[];
     folderId?: string;
   }) => {
-    const res = await fetch(this._url + Api.item.addFromPaths, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.addFromPaths);
-    }
-    const json = await res.json();
-    return schemas.addItemFromPathsSchema.parse(json);
+    return this.request("POST", Api.item.addFromPaths, schemas.addItemFromPathsSchema, { body: data });
   };
 
   /**
@@ -284,16 +280,7 @@ export class EagleClient {
     modificationTime?: number;
     folderId?: string;
   }) => {
-    const res = await fetch(this._url + Api.item.addBookmark, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.addBookmark);
-    }
-    const json = await res.json();
-    return schemas.addBookmarkSchema.parse(json);
+    return this.request("POST", Api.item.addBookmark, schemas.addBookmarkSchema, { body: data });
   };
 
   /**
@@ -306,13 +293,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/info
    */
   getItemInfo = async (data: { id: string }) => {
-    const params = new URLSearchParams(data);
-    const res = await fetch(`${this._url}${Api.item.info}?${params.toString()}`, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.item.info);
-    }
-    const json = await res.json();
-    return schemas.getItemInfoSchema.parse(json);
+    return this.request("GET", Api.item.info, schemas.getItemInfoSchema, { query: data });
   };
 
   /**
@@ -325,17 +306,13 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/thumbnail
    */
   getItemThumbnail = async (data: { id: string }) => {
-    const params = new URLSearchParams(data);
-    const res = await fetch(`${this._url}${Api.item.thumbnail}?${params.toString()}`, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.item.thumbnail);
-    }
-    const json = await res.json();
-    return schemas.getItemThumbnailSchema.parse(json);
+    return this.request("GET", Api.item.thumbnail, schemas.getItemThumbnailSchema, { query: data });
   };
 
   /**
    * Get list of items.
+   *
+   * Parameters set to `undefined` are not sent. `tags` and `folders` are sent as comma-separated lists.
    *
    * @param data - Query parameters
    * @returns List of items
@@ -351,17 +328,7 @@ export class EagleClient {
     tags?: string[];
     folders?: string[];
   }) => {
-    const stringifiedData = Object.entries(data).map(([key, value]): [string, string] => {
-      return typeof value !== "string" ? [key, `${value}`] : [key, value];
-    });
-    const params = new URLSearchParams(stringifiedData);
-    const res = await fetch(`${this._url}${Api.item.list}?${params.toString()}`, { redirect: "follow" });
-
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.item.list);
-    }
-    const json = await res.json();
-    return schemas.getItemListSchema.parse(json);
+    return this.request("GET", Api.item.list, schemas.getItemListSchema, { query: data });
   };
 
   /**
@@ -374,16 +341,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/move-to-trash
    */
   moveItemToTrash = async (data: { itemIds: string[] }) => {
-    const res = await fetch(this._url + Api.item.moveToTrash, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.moveToTrash);
-    }
-    const json = await res.json();
-    return schemas.moveItemToTrashSchema.parse(json);
+    return this.request("POST", Api.item.moveToTrash, schemas.moveItemToTrashSchema, { body: data });
   };
 
   /**
@@ -396,16 +354,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/refresh-palette
    */
   refreshItemPalette = async (data: { id: string }) => {
-    const res = await fetch(this._url + Api.item.refreshPalette, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.refreshPalette);
-    }
-    const json = await res.json();
-    return schemas.refreshItemPaletteSchema.parse(json);
+    return this.request("POST", Api.item.refreshPalette, schemas.refreshItemPaletteSchema, { body: data });
   };
 
   /**
@@ -418,16 +367,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/refresh-thumbnail
    */
   refreshThumbnail = async (data: { id: string }) => {
-    const res = await fetch(this._url + Api.item.refreshThumbnail, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.refreshThumbnail);
-    }
-    const json = await res.json();
-    return schemas.refreshThumbnailSchema.parse(json);
+    return this.request("POST", Api.item.refreshThumbnail, schemas.refreshThumbnailSchema, { body: data });
   };
 
   /**
@@ -439,16 +379,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/update
    */
   updateItem = async (data: { id: string; tags?: string[]; annotation?: string; url?: string; star?: number }) => {
-    const res = await fetch(this._url + Api.item.update, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.item.update);
-    }
-    const json = await res.json();
-    return schemas.updateItemSchema.parse(json);
+    return this.request("POST", Api.item.update, schemas.updateItemSchema, { body: data });
   };
 
   /**
@@ -459,12 +390,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/info
    */
   getLibraryInfo = async () => {
-    const res = await fetch(this._url + Api.library.info, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.library.info);
-    }
-    const json = await res.json();
-    return schemas.getLibraryInfoSchema.parse(json);
+    return this.request("GET", Api.library.info, schemas.getLibraryInfoSchema);
   };
 
   /**
@@ -475,12 +401,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/history
    */
   getLibraryHistory = async () => {
-    const res = await fetch(this._url + Api.library.history, { redirect: "follow" });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "GET", Api.library.history);
-    }
-    const json = await res.json();
-    return schemas.getLibraryHistorySchema.parse(json);
+    return this.request("GET", Api.library.history, schemas.getLibraryHistorySchema);
   };
 
   /**
@@ -493,15 +414,28 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/switch
    */
   switchLibrary = async (data: { libraryPath: string }) => {
-    const res = await fetch(this._url + Api.library.switch, {
-      method: "POST",
-      body: JSON.stringify(data),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      await this.handleErrorResponse(res, "POST", Api.library.switch);
+    return this.request("POST", Api.library.switch, schemas.switchLibrarySchema, { body: data });
+  };
+
+  /**
+   * Get the icon image of a library.
+   *
+   * @param data - Parameters
+   * @param data.libraryPath - Path to the library
+   * @returns Icon image data
+   * @throws {EagleApiError} When the API request fails
+   * @see https://api.eagle.cool/library/icon
+   */
+  getLibraryIcon = async (data: { libraryPath: string }): Promise<ArrayBuffer> => {
+    const res = await this.send("GET", Api.library.icon, { query: data });
+    const buffer = await res.arrayBuffer();
+    if (res.headers.get("content-type")?.includes("json")) {
+      const text = new TextDecoder().decode(buffer);
+      const json = parseJson(text);
+      if (isErrorStatus(json)) {
+        throw new EagleApiError("GET", Api.library.icon, res.status, toErrorResponse(json, text, res));
+      }
     }
-    const json = await res.json();
-    return schemas.switchLibrarySchema.parse(json);
+    return buffer;
   };
 }
