@@ -17,15 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
-
-      - name: Setup Node.js
-        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      # Installs Node.js and pnpm at the versions in mise.toml.
+      # Node 26 bundles npm 11.19+, which meets the trusted publishing requirement (npm >= 11.5.1).
+      - name: Setup mise
+        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
         with:
-          node-version: "24"
-          # No dependency cache in the release job, to avoid cache poisoning (see setup-node docs).
-          registry-url: "https://registry.npmjs.org"
+          # No cache in the release job, to avoid cache poisoning.
+          cache: false
 
       - name: Verify tag matches package.json version
         run: |
@@ -50,7 +48,10 @@ jobs:
       - name: Build project
         run: pnpm build
 
+      # Authenticates with OIDC trusted publishing (id-token: write); no token needed.
       - name: Publish to npm
+        env:
+          NPM_CONFIG_REGISTRY: "https://registry.npmjs.org/"
         run: npm publish --provenance --access public
 
       # Created after publishing so a failed publish does not leave a release behind.

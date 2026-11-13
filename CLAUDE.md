@@ -12,6 +12,8 @@ Official Eagle API documentation: https://api.eagle.cool/
 
 This project uses **pnpm**. The version is pinned by the `packageManager` field in package.json (and in `mise.toml`); enable Corepack (`corepack enable`) to use it automatically.
 
+`mise.toml` pins Node.js and pnpm. The CI and publish workflows install them with `jdx/mise-action`, so update `mise.toml` (and `packageManager`) to change the versions used in CI.
+
 `pnpm-workspace.yaml` holds pnpm settings. `allowBuilds` lists the dependencies allowed to run install scripts (currently only `esbuild`, used by tsx and vitest).
 
 ## Development Commands
