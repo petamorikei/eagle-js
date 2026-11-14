@@ -132,6 +132,25 @@ describe("response schemas", () => {
     expect(result.data.tagsGroups[1].color).toBeUndefined();
   });
 
+  test("renameFolder accepts a folder without images and folders (as after an Eagle restart)", async () => {
+    respond({
+      status: "success",
+      data: {
+        id: "F1",
+        name: "renamed",
+        description: "",
+        modificationTime: 1700000000000,
+        tags: [],
+        children: [],
+        isExpand: true,
+        password: "",
+        passwordTips: "",
+      },
+    });
+    const result = await client.renameFolder({ folderId: "F1", newName: "renamed" });
+    expect(result.data.folders).toBeUndefined();
+  });
+
   test("updateFolder keeps imagesMappings as spelled in the API docs", async () => {
     respond({
       status: "success",
@@ -259,8 +278,15 @@ describe("error handling", () => {
     expect(error.errorResponse).toEqual({ status: "error", data: "503 Service Unavailable" });
   });
 
+  test("error body with only a message (as the v2 API sends) throws EagleApiError with the message", async () => {
+    respond({ status: "error", message: "item not found: x", data: {} }, 500);
+    const error = await getError(client.getItemInfo({ id: "x" }));
+    expect(error.errorResponse).toEqual({ status: "error", message: "item not found: x", data: {} });
+    expect(error.message).toBe("Eagle API Error [GET /api/item/info]: item not found: x");
+  });
+
   test("error body in an unknown shape throws EagleApiError with the raw text", async () => {
-    const body = JSON.stringify({ status: "error", message: "not found" });
+    const body = JSON.stringify({ status: "error", reason: "not found" });
     respond(body, 404);
     const error = await getError(client.getItemInfo({ id: "x" }));
     expect(error.errorResponse).toEqual({ status: "error", data: body });
