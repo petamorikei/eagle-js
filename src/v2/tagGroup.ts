@@ -67,7 +67,7 @@ export class TagGroupApiV2 {
    * @param params.groupId - Tag group ID
    * @param params.tags - Tag names to add
    * @param params.removeFromSource - Remove the tags from their current groups first
-   * @returns The updated tag group
+   * @returns The updated tag group; `data` is missing when the group does not exist
    * @throws {EagleApiError} When the API request fails
    * @see https://developer.eagle.cool/web-api/api/tag-group#add-tags
    */
@@ -81,7 +81,7 @@ export class TagGroupApiV2 {
    * @param params - Parameters
    * @param params.groupId - Tag group ID
    * @param params.tags - Tag names to remove from the group
-   * @returns The updated tag group
+   * @returns The updated tag group; `data` is missing when the group does not exist
    * @throws {EagleApiError} When the API request fails
    * @see https://developer.eagle.cool/web-api/api/tag-group#remove-tags
    */

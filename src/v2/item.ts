@@ -27,6 +27,8 @@ type GetItems = {
    * List items, optionally filtered. Trashed items are not included.
    *
    * With `fields`, each item has only the requested fields, which is faster on large libraries.
+   * The item type narrows to those fields when `fields` is a literal array (e.g. `["id", "name"]`);
+   * a `ItemField[]` variable gives every field.
    * An unknown `id` returns an empty page rather than an error.
    *
    * @param params - Filters, `fields` and pagination (`offset`, `limit`)
@@ -127,7 +129,7 @@ export class ItemApiV2 {
    * @param params - Parameters
    * @param params.itemId - Item ID
    * @param params.filePath - Path to the thumbnail image
-   * @returns Whether the thumbnail was set
+   * @returns `data: true` on success, `false` when the item does not exist
    * @throws {EagleApiError} When the API request fails
    * @see https://developer.eagle.cool/web-api/api/item#set-thumbnail
    */

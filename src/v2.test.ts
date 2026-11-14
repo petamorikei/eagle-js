@@ -241,10 +241,10 @@ describe("v2 tag and tag group", () => {
     expect(updated.data?.color).toBe("blue");
 
     const added = await v2.tagGroup.addTags({ groupId, tags: [tagRenamed] });
-    expect(added.data.tags).toEqual([tagB, tagRenamed]);
+    expect(added.data?.tags).toEqual([tagB, tagRenamed]);
 
     const removed = await v2.tagGroup.removeTags({ groupId, tags: [tagRenamed] });
-    expect(removed.data.tags).toEqual([tagB]);
+    expect(removed.data?.tags).toEqual([tagB]);
   });
 
   test("tagGroup.get lists the group", async () => {
@@ -296,8 +296,15 @@ describe("v2 smart folder", () => {
   });
 
   test("get with pagination", async () => {
+    // Create a second smart folder so that there are at least two, whatever the library already has.
+    const extra = await v2.smartFolder.create({
+      name: `v2-smart-extra-${run}`,
+      conditions: [{ rules: [{ property: "tags", method: "intersection", value: [tag] }], match: "AND" }],
+    });
+    createdSmartFolderIds.push(extra.data.id);
+
     const all = await v2.smartFolder.get({ limit: 1000 });
-    expect(all.data.data.map((folder) => folder.id)).toContain(smartFolderId);
+    expect(all.data.data.map((folder) => folder.id)).toEqual(expect.arrayContaining([smartFolderId, extra.data.id]));
     expect(all.data.total).toBeGreaterThanOrEqual(2);
 
     const second = await v2.smartFolder.get({ offset: 1, limit: 1 });
@@ -328,5 +335,19 @@ describe("v2 AI search", () => {
   test("isInstalled", async () => {
     const result = await v2.aiSearch.isInstalled();
     expect(typeof result.data).toBe("boolean");
+  });
+
+  test("without the plugin, status calls return false and searches throw EagleApiError", async () => {
+    if ((await v2.aiSearch.isInstalled()).data) {
+      return; // Only the "not installed" case can be checked without depending on the plugin's state.
+    }
+    expect((await v2.aiSearch.isReady()).data).toBe(false);
+    expect((await v2.aiSearch.isStarting()).data).toBe(false);
+    expect((await v2.aiSearch.isSyncing()).data).toBe(false);
+    const error = await v2.aiSearch.searchByText({ query: "cat" }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(EagleApiError);
+    expect((error as EagleApiError).errorResponse).toMatchObject({ code: "PLUGIN_NOT_INSTALLED" });
+    await expect(v2.aiSearch.getSyncStatus()).rejects.toThrow(EagleApiError);
+    await expect(v2.aiSearch.checkServiceHealth()).rejects.toThrow(EagleApiError);
   });
 });

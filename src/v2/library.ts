@@ -40,7 +40,7 @@ export class LibraryApiV2 {
    *
    * @param params - Parameters
    * @param params.libraryPath - Path to the `.library` directory
-   * @returns Success response
+   * @returns Success response. The docs show `data: true`; the response has not been verified, so `data` is `unknown`.
    * @throws {EagleApiError} When the API request fails
    * @see https://developer.eagle.cool/web-api/api/library#switch
    */

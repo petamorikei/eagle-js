@@ -160,6 +160,23 @@ describe("errors", () => {
     expect(error.message).toBe("Eagle API Error [POST /api/v2/smartFolder/remove]: smart folder not found: x");
   });
 
+  test("an error with a string code (AI Search without the plugin) keeps the code", async () => {
+    respond(
+      {
+        status: "error",
+        code: "PLUGIN_NOT_INSTALLED",
+        message: "AI Search plugin is not installed",
+        data: { code: "PLUGIN_NOT_INSTALLED" },
+      },
+      500,
+    );
+    const error = await getError(v2.aiSearch.searchByText({ query: "cat" }));
+    expect(error.errorResponse).toMatchObject({ code: "PLUGIN_NOT_INSTALLED" });
+    expect(error.message).toBe(
+      "Eagle API Error [POST /api/v2/aiSearch/searchByText]: PLUGIN_NOT_INSTALLED: AI Search plugin is not installed",
+    );
+  });
+
   test("an unknown endpoint (HTTP 404 with code) throws EagleApiError", async () => {
     respond({ status: "error", code: 404, message: "method not allowed" }, 404);
     const error = await getError(v2.item.getComments({ id: "x" }));
@@ -195,6 +212,13 @@ describe("responses kept as Eagle returns them", () => {
     expect((await v2.tag.update({ originalName: "missing", name: "x" })).data).toBeUndefined();
     ok();
     expect((await v2.tag.merge({ source: "missing", target: "x" })).data).toBeUndefined();
+  });
+
+  test("tagGroup.addTags and removeTags return no data for an unknown group", async () => {
+    ok();
+    expect((await v2.tagGroup.addTags({ groupId: "missing", tags: ["x"] })).data).toBeUndefined();
+    ok();
+    expect((await v2.tagGroup.removeTags({ groupId: "missing", tags: ["x"] })).data).toBeUndefined();
   });
 
   test("tagGroup.remove and item.refreshThumbnail return data: false for an unknown target", async () => {

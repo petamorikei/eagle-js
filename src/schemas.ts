@@ -19,21 +19,23 @@ export const orderSchema = z.enum([
 // Error response schemas
 export const eagleErrorResponseSchema = z.union([
   // e.g. 401/404 from both APIs: {"status":"error","code":404,"message":"method not allowed"}
+  // and v2 AI Search: {"status":"error","code":"PLUGIN_NOT_INSTALLED","message":"...","data":{...}}
   z.object({
     status: z.literal("error"),
-    code: z.number(),
+    code: z.union([z.number(), z.string()]),
     message: z.string(),
-  }),
-  // v1: {"status":"error","data":"File does not exist."}
-  z.object({
-    status: z.literal("error"),
-    data: z.string(),
+    data: z.unknown().optional(),
   }),
   // v2: {"status":"error","message":"item not found: x","data":{}}
   z.object({
     status: z.literal("error"),
     message: z.string(),
     data: z.unknown().optional(),
+  }),
+  // v1: {"status":"error","data":"File does not exist."}
+  z.object({
+    status: z.literal("error"),
+    data: z.string(),
   }),
 ]);
 

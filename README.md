@@ -95,7 +95,7 @@ await v2.item.addComment({ id: "ITEM_ID", x: 10, y: 20, width: 100, height: 80, 
 Things to know about v2:
 
 - Like v1, every method returns the whole response (`{ status, data }`).
-- Some calls report a missing target as a **success** instead of an error, and eagle-js returns it as is. For example, `item.update` and `folder.create` return `data: false`, and `tagGroup.update`, `tag.update` and `tag.merge` return no `data`. The types and each method's description say which.
+- Some calls report a missing target as a **success** instead of an error, and eagle-js returns it as is. For example, `item.update` and `folder.create` return `data: false`, and `tagGroup.update`, `tagGroup.addTags`, `tag.update` and `tag.merge` return no `data`. The types and each method's description say which.
 - `item.add` returns the new IDs before Eagle has indexed the items, so `item.get` may not find them for a short time.
 - `item.get` does not include trashed items, while `item.countAll` counts them.
 - `limit` defaults to 50 and is capped at 1000. Unlike v1, `limit: 0` means the default, not "no items".
@@ -125,6 +125,6 @@ try {
 ```
 
 - `EagleApiError` is thrown when Eagle returns a non-OK HTTP status or a response with `status: "error"`, in both v1 and v2.
-- `errorResponse` is `{ status: "error", code, message }` (for example 401 for a missing token), `{ status: "error", data }` (v1) or `{ status: "error", message }` (v2).
+- `errorResponse` is `{ status: "error", code, message }`, `{ status: "error", message }` (v2) or `{ status: "error", data }` (v1). `code` is a number such as 401 (missing token) or a string such as `"PLUGIN_NOT_INSTALLED"` (AI Search).
 - A `ZodError` is thrown when a successful response does not match the expected schema.
 - Network errors from `fetch` (for example when Eagle is not running) are thrown as is.

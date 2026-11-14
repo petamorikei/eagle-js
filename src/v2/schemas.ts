@@ -251,7 +251,8 @@ export const getAppInfoSchema = success(appInfoSchema);
 
 export const getLibraryInfoSchema = success(libraryInfoSchema);
 export const getLibraryHistorySchema = success(page(z.string()));
-export const switchLibrarySchema = successOptional(z.boolean());
+// Not verified against Eagle (switching libraries would disrupt the test library); the docs show `data: true`.
+export const switchLibrarySchema = successOptional(z.unknown());
 export const getLibraryIconSchema = success(serializedBufferSchema);
 
 export const getItemsSchema = success(page(itemSchema));
@@ -260,6 +261,7 @@ export const addItemSchema = success(addItemResultSchema);
 export const addItemsSchema = success(addItemsResultSchema);
 /** `data` is `false` when the item does not exist. */
 export const updateItemSchema = success(z.union([itemSchema, z.literal(false)]));
+/** `data` is `false` when the item does not exist. */
 export const setCustomThumbnailSchema = success(z.boolean());
 /** `data` is `false` when the item does not exist. */
 export const refreshThumbnailSchema = success(z.boolean());
@@ -292,7 +294,8 @@ export const createTagGroupSchema = success(z.union([tagGroupSchema, z.literal(f
 export const updateTagGroupSchema = successOptional(tagGroupSchema);
 /** `data` is `false` when the group does not exist. */
 export const removeTagGroupSchema = success(z.boolean());
-export const tagGroupResultSchema = success(tagGroupSchema);
+/** `data` is missing when the group does not exist. */
+export const tagGroupResultSchema = successOptional(tagGroupSchema);
 
 export const aiSearchFlagSchema = success(z.boolean());
 export const aiSearchSyncStatusResultSchema = success(aiSearchSyncStatusSchema);
