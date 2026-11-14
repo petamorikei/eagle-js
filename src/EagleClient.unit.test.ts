@@ -166,6 +166,36 @@ describe("getLibraryIcon", () => {
     expect(init?.method).toBe("GET");
   });
 
+  test("returns PNG bytes sent without a Content-Type (as Eagle 4 does)", async () => {
+    const png = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d]);
+    fetchMock.mockResolvedValueOnce(new Response(png, { status: 200 }));
+    const result = await client.getLibraryIcon({ libraryPath: "/path/to/Testing.library" });
+    expect(new Uint8Array(result)).toEqual(png);
+  });
+
+  test("returns SVG text as image data", async () => {
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg"/>';
+    fetchMock.mockResolvedValueOnce(new Response(svg, { status: 200 }));
+    const result = await client.getLibraryIcon({ libraryPath: "/path/to/Testing.library" });
+    expect(new TextDecoder().decode(result)).toBe(svg);
+  });
+
+  test.each(["Library icon does not exist.", "Library does not exist."])(
+    "throws EagleApiError for the plain-text error %j with HTTP 200",
+    async (message) => {
+      fetchMock.mockResolvedValueOnce(new Response(message, { status: 200 }));
+      const error = await client.getLibraryIcon({ libraryPath: "/path/to/Testing.library" }).catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(EagleApiError);
+      expect((error as EagleApiError).httpStatus).toBe(200);
+      expect((error as EagleApiError).errorResponse).toEqual({ status: "error", data: message });
+    },
+  );
+
+  test("throws EagleApiError for an empty body", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 200 }));
+    await expect(client.getLibraryIcon({ libraryPath: "/path/to/Testing.library" })).rejects.toThrow(EagleApiError);
+  });
+
   test("throws EagleApiError for a JSON error with HTTP 200", async () => {
     fetchMock.mockResolvedValueOnce(
       new Response(JSON.stringify({ status: "error", data: "Library not found" }), {

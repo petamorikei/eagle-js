@@ -275,6 +275,18 @@ describe("library", () => {
     expect(result.status).toBe("success");
   });
 
+  test("get icon of the current library", async () => {
+    const info = await client.getLibraryInfo();
+    // The "Testing" library may or may not have an icon set.
+    const icon = await client.getLibraryIcon({ libraryPath: info.data.library.path }).catch((e: unknown) => e);
+    if (icon instanceof EagleApiError) {
+      expect(icon.errorResponse).toEqual({ status: "error", data: "Library icon does not exist." });
+    } else {
+      expect(icon).toBeInstanceOf(ArrayBuffer);
+      expect((icon as ArrayBuffer).byteLength).toBeGreaterThan(0);
+    }
+  });
+
   // Note: switchLibrary test is skipped because:
   // - It requires a valid library path which may not exist in test environment
   // - Switching libraries during tests could disrupt the test environment
@@ -286,45 +298,49 @@ describe("error cases", () => {
     await expect(client.getItemInfo({ id: "invalid-id-12345" })).rejects.toThrow(EagleApiError);
   });
 
-  test("get item thumbnail with invalid id should throw error", async () => {
-    await expect(client.getItemThumbnail({ id: "invalid-id-12345" })).rejects.toThrow();
+  test("get item thumbnail with invalid id should throw EagleApiError", async () => {
+    await expect(client.getItemThumbnail({ id: "invalid-id-12345" })).rejects.toThrow(EagleApiError);
   });
 
-  test("update item with invalid id should throw error", async () => {
+  test("update item with invalid id should throw EagleApiError", async () => {
     await expect(
       client.updateItem({
         id: "invalid-id-12345",
         tags: ["test"],
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(EagleApiError);
   });
 
-  test("refresh item palette with invalid id should throw error", async () => {
-    await expect(client.refreshItemPalette({ id: "invalid-id-12345" })).rejects.toThrow();
+  test("refresh item palette with invalid id should throw EagleApiError", async () => {
+    await expect(client.refreshItemPalette({ id: "invalid-id-12345" })).rejects.toThrow(EagleApiError);
   });
 
-  test("refresh thumbnail with invalid id should throw error", async () => {
-    await expect(client.refreshThumbnail({ id: "invalid-id-12345" })).rejects.toThrow();
+  test("refresh thumbnail with invalid id should throw EagleApiError", async () => {
+    await expect(client.refreshThumbnail({ id: "invalid-id-12345" })).rejects.toThrow(EagleApiError);
+  });
+
+  test("get library icon of a nonexistent library should throw EagleApiError", async () => {
+    await expect(client.getLibraryIcon({ libraryPath: "/nonexistent/Nothing.library" })).rejects.toThrow(EagleApiError);
   });
 
   // Note: moveItemToTrash with invalid ID returns success, not an error
   // This is the expected behavior of the Eagle API
 
-  test("rename folder with invalid id should throw error", async () => {
+  test("rename folder with invalid id should throw EagleApiError", async () => {
     await expect(
       client.renameFolder({
         folderId: "invalid-id-12345",
         newName: "test",
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(EagleApiError);
   });
 
-  test("update folder with invalid id should throw error", async () => {
+  test("update folder with invalid id should throw EagleApiError", async () => {
     await expect(
       client.updateFolder({
         folderId: "invalid-id-12345",
         newName: "test",
       }),
-    ).rejects.toThrow();
+    ).rejects.toThrow(EagleApiError);
   });
 });
