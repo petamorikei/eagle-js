@@ -34,6 +34,7 @@ pnpm dev:watch      # Run src/main.ts in watch mode
 - Eagle app must be running locally on port 41595
 - A library named "Testing" must be selected in Eagle
 - Tests will move all items to trash before execution
+- Setting an icon on the "Testing" library lets the library icon test cover the success path (without one, it checks the "Library icon does not exist." error)
 - Never run `pnpm test` / `vitest` against a library you care about; use `pnpm test:unit` for quick checks
 
 ## Architecture

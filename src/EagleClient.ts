@@ -34,6 +34,25 @@ const parseJson = (text: string): unknown => {
   }
 };
 
+// Error messages such as "Library icon does not exist." are short; images are larger and not valid UTF-8 text.
+const MAX_TEXT_ERROR_BYTES = 1024;
+
+/**
+ * Return the body as text if it looks like a plain-text error message rather than image data.
+ */
+const decodeTextError = (buffer: ArrayBuffer) => {
+  if (buffer.byteLength > MAX_TEXT_ERROR_BYTES) {
+    return undefined;
+  }
+  try {
+    const text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
+    // SVG and other XML images are text too; keep them as image data.
+    return text.trimStart().startsWith("<") ? undefined : text;
+  } catch {
+    return undefined;
+  }
+};
+
 const isErrorStatus = (json: unknown) =>
   typeof json === "object" && json !== null && "status" in json && json.status === "error";
 
@@ -429,12 +448,14 @@ export class EagleClient {
   getLibraryIcon = async (data: { libraryPath: string }): Promise<ArrayBuffer> => {
     const res = await this.send("GET", Api.library.icon, { query: data });
     const buffer = await res.arrayBuffer();
-    if (res.headers.get("content-type")?.includes("json")) {
-      const text = new TextDecoder().decode(buffer);
-      const json = parseJson(text);
-      if (isErrorStatus(json)) {
-        throw new EagleApiError("GET", Api.library.icon, res.status, toErrorResponse(json, text, res));
-      }
+    if (res.headers.get("content-type")?.startsWith("image/")) {
+      return buffer;
+    }
+    // Eagle 4 returns both the icon and errors such as "Library icon does not exist." with HTTP 200
+    // and no Content-Type, so a short text body is treated as an error.
+    const text = buffer.byteLength === 0 ? "" : decodeTextError(buffer);
+    if (text !== undefined) {
+      throw new EagleApiError("GET", Api.library.icon, res.status, toErrorResponse(parseJson(text), text, res));
     }
     return buffer;
   };
