@@ -18,11 +18,21 @@ export const orderSchema = z.enum([
 
 // Error response schemas
 export const eagleErrorResponseSchema = z.union([
+  // e.g. 401/404 from both APIs: {"status":"error","code":404,"message":"method not allowed"}
+  // and v2 AI Search: {"status":"error","code":"PLUGIN_NOT_INSTALLED","message":"...","data":{...}}
   z.object({
     status: z.literal("error"),
-    code: z.number(),
+    code: z.union([z.number(), z.string()]),
     message: z.string(),
+    data: z.unknown().optional(),
   }),
+  // v2: {"status":"error","message":"item not found: x","data":{}}
+  z.object({
+    status: z.literal("error"),
+    message: z.string(),
+    data: z.unknown().optional(),
+  }),
+  // v1: {"status":"error","data":"File does not exist."}
   z.object({
     status: z.literal("error"),
     data: z.string(),
@@ -47,8 +57,8 @@ const paletteSchema = z.object({
 export type ChildFolder = {
   id: string;
   name: string;
-  images: unknown[];
-  folders: unknown[];
+  images?: unknown[];
+  folders?: unknown[];
   modificationTime: number;
   editable?: boolean;
   imagesMappings?: unknown;
@@ -78,8 +88,8 @@ const childSchema: z.ZodType<ChildFolder> = z.lazy(() =>
   z.object({
     id: z.string(),
     name: z.string(),
-    images: z.array(z.unknown()),
-    folders: z.array(z.unknown()),
+    images: z.array(z.unknown()).optional(),
+    folders: z.array(z.unknown()).optional(),
     modificationTime: z.number(),
     editable: z.boolean().optional(),
     imagesMappings: z.unknown().optional(),
@@ -138,8 +148,8 @@ export const renameFolderSchema = z.object({
   data: z.object({
     id: z.string(),
     name: z.string(),
-    images: z.array(z.unknown()),
-    folders: z.array(z.unknown()),
+    images: z.array(z.unknown()).optional(),
+    folders: z.array(z.unknown()).optional(),
     modificationTime: z.number(),
     imagesMappings: z.unknown().optional(),
     tags: z.array(z.string()),
@@ -162,8 +172,8 @@ export const updateFolderSchema = z.object({
     id: z.string(),
     name: z.string(),
     description: z.string().optional(),
-    images: z.array(z.unknown()),
-    folders: z.array(z.unknown()),
+    images: z.array(z.unknown()).optional(),
+    folders: z.array(z.unknown()).optional(),
     modificationTime: z.number(),
     imagesMappings: z.unknown().optional(),
     tags: z.array(z.string()),
