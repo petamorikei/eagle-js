@@ -41,13 +41,28 @@ pnpm dev:watch      # Run src/main.ts in watch mode
 
 ### Core Components
 
-**EagleClient (src/EagleClient.ts)** - Main singleton client
+**EagleClient (src/EagleClient.ts)** - Main client
 
-- Singleton pattern: Access via `EagleClient.instance`
-- Default connection: `http://localhost:41595`
-- All methods are async and return Zod-validated typed results
-- Groups API methods into: application, folder, item, library
-- Every method goes through the private `request()` helper, which builds the URL/query, sends the JSON body, and handles errors
+- `EagleClient.instance` is the shared client for `http://localhost:41595`; `new EagleClient({ host, port, token })` creates one for another machine
+- Methods on the client call the legacy API (v1, `/api/...`): application, folder, item, library
+- `client.v2` is the Web API v2 (`/api/v2/...`), see below
+- All methods are async and return Zod-validated typed results (the whole `{ status, data }` response)
+
+**EagleHttp (src/http.ts)** - Internal HTTP transport shared by v1 and v2 (not exported from the package)
+
+- `request()` builds the URL/query, sends the JSON body, handles errors and validates the response; `send()` returns the raw `Response` (used for library icons)
+- Adds the `token` query parameter to every request when configured; `EagleApiError.endpoint` never contains it
+
+**v2 (src/v2/)** - Web API v2, exposed as `client.v2.<category>.<endpoint>()`
+
+- `EagleV2.ts` groups one class per category: `app`, `library`, `item` (including comments), `folder`, `smartFolder`, `tag`, `tagGroup`, `aiSearch`
+- `endpoints.ts` holds the paths, `schemas.ts` the Zod schemas, `types.ts` the types (exported as the `V2` namespace)
+- Schemas follow what Eagle 4.0 actually returns, not the docs (e.g. tags have `imageCount`, `library/info` has `tagsGroups`, `smartFolder/get` is paginated). Entities are `z.looseObject`, so unknown fields are kept
+- Some calls report a missing target as success with `data: false` or no `data`; these are returned as is and typed accordingly
+- Endpoints that accept both GET and POST are called with POST: GET with `fields` fails on Eagle 4.0 (`fields.forEach is not a function`)
+- `item.get` / `smartFolder.getItems` with `fields` validate with `itemSchema.pick()` and narrow the item type to the requested fields
+- `library.icon` returns an `ArrayBuffer`; Eagle 4 sends it as a JSON-serialized Node.js Buffer
+- AI Search is typed from the docs only (the plugin was not available for live verification)
 
 **schemas (src/schemas.ts)** - Zod schemas for runtime validation
 
@@ -59,6 +74,7 @@ pnpm dev:watch      # Run src/main.ts in watch mode
 
 - Thrown on non-OK HTTP responses and on responses whose `status` is `"error"` (even with HTTP 200)
 - Contains method, endpoint, httpStatus, and errorResponse details
+- `errorResponse` is `{ status, code, message }` (e.g. 401/404), `{ status, data }` (v1) or `{ status, message, data? }` (v2)
 - If the error body is not JSON or has an unknown shape, `errorResponse` is `{ status: "error", data: <raw body> }`
 - A success response that fails schema validation throws `ZodError`; network failures from `fetch` are passed through
 
@@ -68,7 +84,7 @@ pnpm dev:watch      # Run src/main.ts in watch mode
 
 ### Key Design Patterns
 
-1. **Singleton Client**: `EagleClient.instance` ensures single connection instance
+1. **Shared Client**: `EagleClient.instance` for localhost; construct a client for other hosts
 2. **Zod Validation**: All API responses are runtime-validated with Zod schemas
 3. **Type Inference**: Types are derived from Zod schemas (`z.infer<typeof schema>`)
 4. **Fetch-based**: Uses native `fetch()` with `redirect: "follow"`
@@ -80,17 +96,29 @@ export * from "./EagleApiError.ts";
 export * from "./EagleClient.ts";
 export * as schemas from "./schemas.ts";
 export * from "./types.ts";
+export * from "./v2/EagleV2.ts";
+export * as v2Schemas from "./v2/schemas.ts";
+export type * as V2 from "./v2/types.ts";
 ```
 
 Relative imports use `.ts` extensions; `rewriteRelativeImportExtensions` rewrites them to `.js` on build.
 
 ## Testing Strategy
 
-Unit tests in `src/EagleClient.unit.test.ts` stub `fetch` with `vi.stubGlobal` and cover request building and error handling. They run in CI.
+Unit tests (`*.unit.test.ts`) stub `fetch` with `vi.stubGlobal` and cover request building, connection settings and error handling. They run in CI. `src/v2/EagleV2.unit.test.ts` uses response bodies captured from Eagle 4.0.0 and also checks types with `expectTypeOf` (verified by `pnpm typecheck`).
 
-Integration tests in `src/main.test.ts` use Vitest against a live Eagle app:
+Integration tests use Vitest against a live Eagle app. `vitest.config.ts` sets `fileParallelism: false` because the files share the "Testing" library.
+
+`src/main.test.ts` (v1):
 
 - **beforeAll**: Verify "Testing" library is selected, clean all items
 - **Test organization**: Grouped by API category (application, folder, item, library, error cases)
 - **Test data**: Uses assets/ directory for path-based imports
 - **Cleanup**: Helper function `moveAllItemsToTrash()` ensures clean state
+
+`src/v2.test.ts` (v2):
+
+- Verifies the "Testing" library, then creates its own items, folders, tags, tag groups and smart folders with a per-run suffix, and removes or trashes them in `afterAll`. Existing tag groups and smart folders are not touched
+- `item.add` returns before Eagle indexes the item; `waitForItems()` polls `item.get` before using new items
+- Check v2 writes with v2 reads: the v1 `library/info` keeps returning stale smart folders and tag groups until Eagle restarts
+- Eagle has no API to delete folders, so test folders remain in the library

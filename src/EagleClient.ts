@@ -1,88 +1,44 @@
-import type { z } from "zod";
 import { Api } from "./Api.ts";
 import { EagleApiError } from "./EagleApiError.ts";
+import { decodeTextError, type EagleClientOptions, EagleHttp, parseJson, toErrorResponse } from "./http.ts";
 import * as schemas from "./schemas.ts";
-import type { AddItemFromUrlsItem, Color, EagleErrorResponse, HttpHeaders, Order } from "./types.ts";
+import type { AddItemFromUrlsItem, Color, HttpHeaders, Order } from "./types.ts";
+import { EagleV2 } from "./v2/EagleV2.ts";
 
-type HttpMethod = "GET" | "POST";
-
-type QueryValue = string | number | boolean | readonly string[] | undefined;
-
-type RequestOptions = {
-  /** Query parameters. `undefined` values are omitted and arrays are joined with `,`. */
-  query?: Record<string, QueryValue>;
-  /** Request body, serialized as JSON. */
-  body?: unknown;
-};
-
-const toSearchParams = (query: Record<string, QueryValue>) => {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value === undefined) {
-      continue;
-    }
-    params.append(key, Array.isArray(value) ? value.join(",") : String(value));
-  }
-  return params;
-};
-
-const parseJson = (text: string): unknown => {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return undefined;
-  }
-};
-
-// Error messages such as "Library icon does not exist." are short; images are larger and not valid UTF-8 text.
-const MAX_TEXT_ERROR_BYTES = 1024;
-
-/**
- * Return the body as text if it looks like a plain-text error message rather than image data.
- */
-const decodeTextError = (buffer: ArrayBuffer) => {
-  if (buffer.byteLength > MAX_TEXT_ERROR_BYTES) {
-    return undefined;
-  }
-  try {
-    const text = new TextDecoder("utf-8", { fatal: true }).decode(buffer);
-    // SVG and other XML images are text too; keep them as image data.
-    return text.trimStart().startsWith("<") ? undefined : text;
-  } catch {
-    return undefined;
-  }
-};
-
-const isErrorStatus = (json: unknown) =>
-  typeof json === "object" && json !== null && "status" in json && json.status === "error";
-
-const toErrorResponse = (json: unknown, text: string, res: Response): EagleErrorResponse => {
-  const parsed = schemas.eagleErrorResponseSchema.safeParse(json);
-  if (parsed.success) {
-    return parsed.data;
-  }
-  return { status: "error", data: text || `${res.status} ${res.statusText}`.trim() };
-};
+export type { EagleClientOptions } from "./http.ts";
 
 /**
  * Client for interacting with the Eagle API.
  *
+ * The methods on the client itself call the legacy API (v1, `/api/...`).
+ * The Web API v2 (`/api/v2/...`) is available under {@link EagleClient.v2}.
+ *
  * @see https://api.eagle.cool/
+ * @see https://developer.eagle.cool/web-api
  */
 export class EagleClient {
   private static _instance: EagleClient;
-  private _host: string;
-  private _port: number;
-  private _url: string;
+  private readonly http: EagleHttp;
 
-  private constructor(host = "localhost", port = 41595) {
-    this._host = host;
-    this._port = port;
-    this._url = `http://${this._host}:${this._port}`;
+  /**
+   * Eagle Web API v2 (`/api/v2/...`), grouped by category. It shares this client's connection settings.
+   *
+   * @see https://developer.eagle.cool/web-api
+   */
+  readonly v2: EagleV2;
+
+  /**
+   * Create a client. Use {@link EagleClient.instance} for the default connection (`http://localhost:41595`).
+   *
+   * @param options - Connection settings (host, port and API token)
+   */
+  constructor(options: EagleClientOptions = {}) {
+    this.http = new EagleHttp(options);
+    this.v2 = new EagleV2(this.http);
   }
 
   /**
-   * Get the singleton instance of EagleClient.
+   * Get the shared instance of EagleClient, connected to `http://localhost:41595` without a token.
    *
    * @returns The singleton EagleClient instance
    */
@@ -94,45 +50,6 @@ export class EagleClient {
   }
 
   /**
-   * Send a request to the Eagle API. A non-OK HTTP response is thrown as {@link EagleApiError}.
-   */
-  private async send(method: HttpMethod, endpoint: string, { query, body }: RequestOptions = {}) {
-    const search = query ? toSearchParams(query).toString() : "";
-    const url = `${this._url}${endpoint}${search ? `?${search}` : ""}`;
-    const res = await fetch(url, {
-      method,
-      body: body === undefined ? undefined : JSON.stringify(body),
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      throw new EagleApiError(method, endpoint, res.status, toErrorResponse(parseJson(text), text, res));
-    }
-    return res;
-  }
-
-  /**
-   * Send a request to the Eagle API and validate the JSON response.
-   *
-   * Any non-OK HTTP response, and any response whose `status` is `"error"`, is thrown as {@link EagleApiError}.
-   * A successful response that does not match `schema` is thrown as a `ZodError`.
-   */
-  private async request<S extends z.ZodType>(
-    method: HttpMethod,
-    endpoint: string,
-    schema: S,
-    options?: RequestOptions,
-  ): Promise<z.output<S>> {
-    const res = await this.send(method, endpoint, options);
-    const text = await res.text();
-    const json = parseJson(text);
-    if (isErrorStatus(json)) {
-      throw new EagleApiError(method, endpoint, res.status, toErrorResponse(json, text, res));
-    }
-    return schema.parse(json);
-  }
-
-  /**
    * Get Eagle application information.
    *
    * @returns Application information
@@ -140,7 +57,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/application/info
    */
   getApplicationInfo = async () => {
-    return this.request("GET", Api.application.info, schemas.getApplicationInfoSchema);
+    return this.http.request("GET", Api.application.info, schemas.getApplicationInfoSchema);
   };
 
   /**
@@ -154,7 +71,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/create
    */
   createFolder = async (data: { folderName: string; parentFolderId?: string }) => {
-    return this.request("POST", Api.folder.create, schemas.createFolderSchema, { body: data });
+    return this.http.request("POST", Api.folder.create, schemas.createFolderSchema, { body: data });
   };
 
   /**
@@ -168,7 +85,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/rename
    */
   renameFolder = async (data: { folderId: string; newName: string }) => {
-    return this.request("POST", Api.folder.rename, schemas.renameFolderSchema, { body: data });
+    return this.http.request("POST", Api.folder.rename, schemas.renameFolderSchema, { body: data });
   };
 
   /**
@@ -184,7 +101,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/update
    */
   updateFolder = async (data: { folderId: string; newName?: string; newDescription?: string; newColor?: Color }) => {
-    return this.request("POST", Api.folder.update, schemas.updateFolderSchema, { body: data });
+    return this.http.request("POST", Api.folder.update, schemas.updateFolderSchema, { body: data });
   };
 
   /**
@@ -195,7 +112,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/list
    */
   getFolderList = async () => {
-    return this.request("GET", Api.folder.list, schemas.getFolderListSchema);
+    return this.http.request("GET", Api.folder.list, schemas.getFolderListSchema);
   };
 
   /**
@@ -206,7 +123,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/folder/list-recent
    */
   getRecentFolderList = async () => {
-    return this.request("GET", Api.folder.listRecent, schemas.getRecentFolderListSchema);
+    return this.http.request("GET", Api.folder.listRecent, schemas.getRecentFolderListSchema);
   };
 
   /**
@@ -228,7 +145,7 @@ export class EagleClient {
     folderId?: string;
     headers?: HttpHeaders;
   }) => {
-    return this.request("POST", Api.item.addFromUrl, schemas.addItemFromUrlSchema, { body: data });
+    return this.http.request("POST", Api.item.addFromUrl, schemas.addItemFromUrlSchema, { body: data });
   };
 
   /**
@@ -240,7 +157,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/add-from-urls
    */
   addItemFromUrls = async (data: { items: AddItemFromUrlsItem[]; folderId?: string }) => {
-    return this.request("POST", Api.item.addFromUrls, schemas.addItemFromUrlsSchema, { body: data });
+    return this.http.request("POST", Api.item.addFromUrls, schemas.addItemFromUrlsSchema, { body: data });
   };
 
   /**
@@ -259,7 +176,7 @@ export class EagleClient {
     tags?: string[];
     folderId?: string;
   }) => {
-    return this.request("POST", Api.item.addFromPath, schemas.addItemFromPathSchema, { body: data });
+    return this.http.request("POST", Api.item.addFromPath, schemas.addItemFromPathSchema, { body: data });
   };
 
   /**
@@ -280,7 +197,7 @@ export class EagleClient {
     }[];
     folderId?: string;
   }) => {
-    return this.request("POST", Api.item.addFromPaths, schemas.addItemFromPathsSchema, { body: data });
+    return this.http.request("POST", Api.item.addFromPaths, schemas.addItemFromPathsSchema, { body: data });
   };
 
   /**
@@ -299,7 +216,7 @@ export class EagleClient {
     modificationTime?: number;
     folderId?: string;
   }) => {
-    return this.request("POST", Api.item.addBookmark, schemas.addBookmarkSchema, { body: data });
+    return this.http.request("POST", Api.item.addBookmark, schemas.addBookmarkSchema, { body: data });
   };
 
   /**
@@ -312,7 +229,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/info
    */
   getItemInfo = async (data: { id: string }) => {
-    return this.request("GET", Api.item.info, schemas.getItemInfoSchema, { query: data });
+    return this.http.request("GET", Api.item.info, schemas.getItemInfoSchema, { query: data });
   };
 
   /**
@@ -325,7 +242,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/thumbnail
    */
   getItemThumbnail = async (data: { id: string }) => {
-    return this.request("GET", Api.item.thumbnail, schemas.getItemThumbnailSchema, { query: data });
+    return this.http.request("GET", Api.item.thumbnail, schemas.getItemThumbnailSchema, { query: data });
   };
 
   /**
@@ -347,7 +264,7 @@ export class EagleClient {
     tags?: string[];
     folders?: string[];
   }) => {
-    return this.request("GET", Api.item.list, schemas.getItemListSchema, { query: data });
+    return this.http.request("GET", Api.item.list, schemas.getItemListSchema, { query: data });
   };
 
   /**
@@ -360,7 +277,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/move-to-trash
    */
   moveItemToTrash = async (data: { itemIds: string[] }) => {
-    return this.request("POST", Api.item.moveToTrash, schemas.moveItemToTrashSchema, { body: data });
+    return this.http.request("POST", Api.item.moveToTrash, schemas.moveItemToTrashSchema, { body: data });
   };
 
   /**
@@ -373,7 +290,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/refresh-palette
    */
   refreshItemPalette = async (data: { id: string }) => {
-    return this.request("POST", Api.item.refreshPalette, schemas.refreshItemPaletteSchema, { body: data });
+    return this.http.request("POST", Api.item.refreshPalette, schemas.refreshItemPaletteSchema, { body: data });
   };
 
   /**
@@ -386,7 +303,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/refresh-thumbnail
    */
   refreshThumbnail = async (data: { id: string }) => {
-    return this.request("POST", Api.item.refreshThumbnail, schemas.refreshThumbnailSchema, { body: data });
+    return this.http.request("POST", Api.item.refreshThumbnail, schemas.refreshThumbnailSchema, { body: data });
   };
 
   /**
@@ -398,7 +315,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/item/update
    */
   updateItem = async (data: { id: string; tags?: string[]; annotation?: string; url?: string; star?: number }) => {
-    return this.request("POST", Api.item.update, schemas.updateItemSchema, { body: data });
+    return this.http.request("POST", Api.item.update, schemas.updateItemSchema, { body: data });
   };
 
   /**
@@ -409,7 +326,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/info
    */
   getLibraryInfo = async () => {
-    return this.request("GET", Api.library.info, schemas.getLibraryInfoSchema);
+    return this.http.request("GET", Api.library.info, schemas.getLibraryInfoSchema);
   };
 
   /**
@@ -420,7 +337,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/history
    */
   getLibraryHistory = async () => {
-    return this.request("GET", Api.library.history, schemas.getLibraryHistorySchema);
+    return this.http.request("GET", Api.library.history, schemas.getLibraryHistorySchema);
   };
 
   /**
@@ -433,7 +350,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/switch
    */
   switchLibrary = async (data: { libraryPath: string }) => {
-    return this.request("POST", Api.library.switch, schemas.switchLibrarySchema, { body: data });
+    return this.http.request("POST", Api.library.switch, schemas.switchLibrarySchema, { body: data });
   };
 
   /**
@@ -446,7 +363,7 @@ export class EagleClient {
    * @see https://api.eagle.cool/library/icon
    */
   getLibraryIcon = async (data: { libraryPath: string }): Promise<ArrayBuffer> => {
-    const res = await this.send("GET", Api.library.icon, { query: data });
+    const res = await this.http.send("GET", Api.library.icon, { query: data });
     const buffer = await res.arrayBuffer();
     if (res.headers.get("content-type")?.startsWith("image/")) {
       return buffer;
